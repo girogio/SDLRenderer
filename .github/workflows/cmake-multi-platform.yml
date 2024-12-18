@@ -54,12 +54,12 @@ jobs:
       run: |
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
-      if: matrix.os == 'ubuntu-latest'
     - name: Install linux dependencies
+      if: matrix.os == 'ubuntu-latest'
       run: sudo apt-get install -y libassimp5 libglm-dev libsdl2-image-dev libsdl2-dev libglew-dev
 
-      if: matrix.os == 'windows-latest'
     - name: Install windows dependencies
+      if: matrix.os == 'windows-latest'
       run: vcpkg install
 
 
