@@ -1,2 +1,6 @@
 vcpkg_installed/
 build/
+
+.vscode/
+
+*.pdb
