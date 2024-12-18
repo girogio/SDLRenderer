@@ -56,7 +56,7 @@ jobs:
 
     - name: Install linux dependencies
       if: matrix.os == 'ubuntu-latest'
-      run: sudo apt-get install -y libassimp5 libglm-dev libsdl2-image-dev libsdl2-dev libglew-dev
+      run: sudo apt-get install -y libassimp5 libglm-dev libsdl2-image-2.0-0 libsdl2-dev libglew-dev libsdl2-2.0-0
 
     - name: Install windows dependencies
       if: matrix.os == 'windows-latest'
