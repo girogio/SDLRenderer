@@ -1,10 +1,12 @@
 {
   "dependencies": [
+    "assimp",
     "glew",
     "glm",
+    "glslang",
     "opengl",
     "sdl2",
     "sdl2-image",
-    "assimp"
+    "openal-soft"
   ]
 }

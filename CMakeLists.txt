@@ -30,3 +30,6 @@ target_link_libraries(SDLRender PRIVATE glm::glm)
 
 find_package(assimp CONFIG REQUIRED)
 target_link_libraries(SDLRender PRIVATE assimp::assimp)
+
+find_package(OpenAL CONFIG REQUIRED)
+target_link_libraries(SDLRender PRIVATE OpenAL::OpenAL)
