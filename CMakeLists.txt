@@ -18,7 +18,7 @@ target_link_libraries(SDLRender
 )
 
 find_package(SDL2_image CONFIG REQUIRED)
-target_link_libraries(SDLRender PRIVATE SDL2::SDL2_image)
+target_link_libraries(SDLRender PRIVATE SDL2_image::SDL2_image)
 
 find_package(GLEW REQUIRED)
 target_link_libraries(SDLRender PRIVATE GLEW::GLEW)
