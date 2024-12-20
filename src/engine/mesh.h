@@ -56,7 +56,7 @@ public:
             else if (textures[i].type == "specular")
                 number = std::to_string(specularCount++);
 
-            glUniform1i(glGetUniformLocation(shader.ID, (name + "[" + number + "]").c_str()), i);
+            // glUniform1i(glGetUniformLocation(shader.ID, (name + "[" + number + "]").c_str()), i);
 
             glBindTexture(GL_TEXTURE_2D, textures[i].id);
         }

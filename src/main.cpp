@@ -62,9 +62,15 @@ int main(int argc, char *argv[])
     float deltaTime = 0.0f;
     float now = 0.0f;
 
-    // Mesh triangle = Mesh(vertices, indices, std::vector<Texture>());
-    Model backpack = Model("../src/assets/models/backpack/backpack.obj", false);
-    defaultShader.setMat4("model", backpack.getModelMatrix());
+    // load texture
+    Texture t = TextureFromFile("wall.png", "../src/assets/textures/", true);
+
+    Mesh triangle = Mesh(vertices, indices, std::vector<Texture>({t}));
+    glm::mat4 model = glm::mat4(1.0f);
+    defaultShader.setMat4("model", model);
+
+    // Model backpack = Model("../src/assets/models/backpack/backpack.obj", false);
+    // defaultShader.setMat4("model", backpack.getModelMatrix());
 
     Camera c = Camera(glm::vec3(0.0f, 0.0f, 3.0f));
     glm::mat4 view = c.getViewMatrix();
@@ -85,9 +91,6 @@ int main(int argc, char *argv[])
         now = SDL_GetTicks() / 1000.0f;
         deltaTime = now - lastFrame;
         lastFrame = now;
-
-        // model = glm::rotate(model, glm::radians(10.0f * deltaTime), glm::vec3(0.5f, 1.0f, 0.0f));
-        // defaultShader.setMat4("model", model);
 
         SDL_Event event;
         while (SDL_PollEvent(&event))
@@ -174,11 +177,13 @@ int main(int argc, char *argv[])
         defaultShader.setMat4("view", c.getViewMatrix());
 
         // Clear the screen
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Draw the triangle
-        backpack.Draw(defaultShader);
+        triangle.Draw(defaultShader);
+
+        // backpack.Draw(defaultShader);
 
         // Swap the buffer
         window.swapBuffer();

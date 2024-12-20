@@ -12,7 +12,7 @@
 #include "mesh.h"
 #include "node.h"
 
-unsigned int TextureFromFile(const char *path, const std::string &directory, bool gamma = false);
+Texture TextureFromFile(const char *path, const std::string &directory, bool gamma = false);
 
 class Model : public Node
 {
@@ -22,7 +22,7 @@ public:
     std::string directory;
     bool gammaCorrection;
 
-    Model(char *path, bool gamma) : gammaCorrection(gamma)
+    Model(std::string path, bool gamma) : gammaCorrection(gamma)
     {
         loadModel(path);
     }
@@ -128,8 +128,7 @@ private:
             }
             if (!skip)
             { // if texture hasn't been loaded already, load it
-                Texture texture;
-                texture.id = TextureFromFile(str.C_Str(), this->directory);
+                Texture texture = TextureFromFile(str.C_Str(), this->directory);
                 texture.type = typeName;
                 texture.path = str.C_Str();
                 textures.push_back(texture);
@@ -140,17 +139,20 @@ private:
     }
 };
 
-unsigned int TextureFromFile(const char *path, const std::string &directory, bool gamma)
+Texture TextureFromFile(const char *path, const std::string &directory, bool gamma)
 {
+
+    Texture t;
+
     std::string filename = std::string(path);
     filename = directory + '/' + filename;
+
+    t.path = filename;
 
     unsigned int textureID;
     glGenTextures(1, &textureID);
 
     int width, height, nrComponents;
-    // unsigned char *data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
-    // sdl srufae
     SDL_Surface *surface = IMG_Load(filename.c_str());
     if (!surface)
     {
@@ -190,5 +192,7 @@ unsigned int TextureFromFile(const char *path, const std::string &directory, boo
         SDL_FreeSurface(surface);
     }
 
-    return textureID;
+    t.id = textureID;
+
+    return t;
 }
