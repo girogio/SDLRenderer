@@ -45,6 +45,16 @@ int main(int argc, char *argv[])
         {{0.5f, 0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
         {{-0.5f, 0.5f, 0.5f}, {0.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}};
 
+    // triangle vertices (position, normal, texCoords)
+    // 0,0 1,0 0.5,1
+    std::vector<Vertex> triangleVertices = {
+        {{-0.5f, -0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
+        {{0.5f, -0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f}},
+        {{0.0f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.5f, 1.0f}},
+    };
+
+    std::vector<unsigned int> triangleIndices = {0, 1, 2};
+
     indices = {
         0, 1, 2, 2, 3, 0,
         1, 5, 6, 6, 2, 1,
@@ -62,15 +72,8 @@ int main(int argc, char *argv[])
     float deltaTime = 0.0f;
     float now = 0.0f;
 
-    // load texture
-    Texture t = TextureFromFile("wall.png", "../src/assets/textures/", true);
-
-    Mesh triangle = Mesh(vertices, indices, std::vector<Texture>({t}));
-    glm::mat4 model = glm::mat4(1.0f);
-    defaultShader.setMat4("model", model);
-
-    // Model backpack = Model("../src/assets/models/backpack/backpack.obj", false);
-    // defaultShader.setMat4("model", backpack.getModelMatrix());
+    Model backpack = Model("../src/assets/models/backpack/backpack.obj", false);
+    defaultShader.setMat4("model", backpack.getModelMatrix());
 
     Camera c = Camera(glm::vec3(0.0f, 0.0f, 3.0f));
     glm::mat4 view = c.getViewMatrix();
@@ -181,9 +184,9 @@ int main(int argc, char *argv[])
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Draw the triangle
-        triangle.Draw(defaultShader);
+        // triangle.Draw(defaultShader);
 
-        // backpack.Draw(defaultShader);
+        backpack.Draw(defaultShader);
 
         // Swap the buffer
         window.swapBuffer();

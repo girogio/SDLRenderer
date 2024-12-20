@@ -3,7 +3,11 @@ project(SDLRender)
 
 set(CMAKE_CXX_STANDARD 23)
 
-add_executable(SDLRender src/main.cpp)
+set(CMAKE_BUILD_TYPE Release)
+
+set(CMAKE_CONFIGURATION_TYPES "Release" CACHE STRING "" FORCE)
+
+add_executable(SDLRender src/main.cpp src/stb_image.h src/stb_image.cpp)
 
 find_package(OpenGL REQUIRED)
 target_link_libraries(SDLRender PRIVATE ${OPENGL_LIBRARIES})
@@ -17,6 +21,7 @@ target_link_libraries(SDLRender
         SDL2::SDL2main
 )
 
+set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
 find_package(SDL2_image CONFIG REQUIRED)
 target_link_libraries(SDLRender PRIVATE SDL2_image::SDL2_image)
 

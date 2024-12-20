@@ -1,7 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include <SDL2/SDL_image.h>
+#include "../stb_image.h"
 
 #include <vector>
 #include <string>
@@ -43,20 +43,25 @@ public:
     {
         unsigned int diffuseCount = 1;
         unsigned int specularCount = 1;
+        unsigned int normalCount = 1;
+        unsigned int heightCount = 1;
 
         for (unsigned int i = 0; i < textures.size(); i++)
         {
             glActiveTexture(GL_TEXTURE0 + i); // activate proper texture unit before binding
 
             std::string number;
-            std::string name = "texture_";
 
-            if (textures[i].type == "diffuse")
+            if (textures[i].type == "texture_diffuse")
                 number = std::to_string(diffuseCount++);
-            else if (textures[i].type == "specular")
+            else if (textures[i].type == "texture_specular")
                 number = std::to_string(specularCount++);
+            else if (textures[i].type == "texture_normal")
+                number = std::to_string(normalCount++);
+            else if (textures[i].type == "texture_height")
+                number = std::to_string(heightCount++);
 
-            // glUniform1i(glGetUniformLocation(shader.ID, (name + "[" + number + "]").c_str()), i);
+            glUniform1i(glGetUniformLocation(shader.ID, (textures[i].type + number).c_str()), i);
 
             glBindTexture(GL_TEXTURE_2D, textures[i].id);
         }
@@ -95,37 +100,6 @@ private:
 
         glEnableVertexAttribArray(2);
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)offsetof(Vertex, texCoord));
-
-        for (unsigned int i = 0; i < textures.size(); i++)
-        {
-            SDL_Surface *surface = IMG_Load(textures[i].path.c_str());
-
-            if (!surface)
-            {
-                std::cerr << "ERROR::TEXTURE::LOADING_FAILED\n"
-                          << IMG_GetError() << std::endl;
-            }
-
-            unsigned int texture;
-            glGenTextures(1, &texture);
-            glBindTexture(GL_TEXTURE_2D, texture);
-
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, surface->w, surface->h, 0, GL_RGB, GL_UNSIGNED_BYTE, surface->pixels);
-            glGenerateMipmap(GL_TEXTURE_2D);
-
-            // set the texture wrapping parameters
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-            // set the texture filtering parameters
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-            // free sdl2 surface
-            SDL_FreeSurface(surface);
-
-            textures[i].id = texture;
-        }
 
         glBindVertexArray(0);
     }

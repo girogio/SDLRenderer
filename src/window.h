@@ -4,7 +4,7 @@
 #include <GL/glew.h>
 
 #define GL_VERSION_MAJOR 4
-#define GL_VERSION_MINOR 3
+#define GL_VERSION_MINOR 1
 
 #define MSAA_SAMPLES 4
 #define DEPTH_SIZE 24
