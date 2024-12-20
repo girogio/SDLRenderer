@@ -20,7 +20,6 @@ public:
 
     Node() : position(glm::vec3(0.0f)), scale(glm::vec3(1.0f)), rotation(glm::vec3(0.0f)), parent(nullptr)
     {
-        std::cout << "Node created" << std::endl;
     }
 
     Node(glm::vec3 position, glm::vec3 scale, glm::vec3 rotation) : position(position), scale(glm::vec3(1.0f)), rotation(glm::vec3(0.0f)), parent(nullptr)
@@ -35,7 +34,7 @@ public:
 
     ~Node()
     {
-        std::cout << "Node destroyed" << std::endl;
+        // std::cout << "Node destroyed" << std::endl;
     }
 
     void setParent(Node *parent)

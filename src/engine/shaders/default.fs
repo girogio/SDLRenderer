@@ -14,9 +14,23 @@ struct Material {
 
 uniform Material material;
 
+uniform sampler2D diffuse_textures[MAX_DIFFUSE_TEXTURES];
+uniform sampler2D specular_textures[MAX_SPECULAR_TEXTURES];
+
 out vec4 FragColor;
 
 void main() {
     FragColor = vec4(1.0, 0.5, 0.2, 1.0);
+
+    vec4 diffuseColor = vec4(material.diffuse, 1.0);
+    vec4 specularColor = vec4(material.specular, 1.0);
+
+    // for(int i = 0; i < MAX_DIFFUSE_TEXTURES; i++) {
+    //     if(diffuse_textures[i] != 0) {
+    //         diffuseColor *= texture(diffuse_textures[i], texCoord);
+    //     }
+    // }
+
+    FragColor = diffuseColor + specularColor;
 
 }

@@ -10,10 +10,12 @@
 
 #include "window.h"
 
+#include "engine/input.h"
 #include "engine/camera.h"
 #include "engine/shader.h"
+
 #include "engine/mesh.h"
-#include "engine/input.h"
+#include "engine/model.h"
 
 void resizeCallback(int width, int height)
 {
@@ -60,23 +62,16 @@ int main(int argc, char *argv[])
     float deltaTime = 0.0f;
     float now = 0.0f;
 
-    Texture texture1;
-    texture1.id = 0;
-    texture1.type = DIFFUSE;
-    texture1.path = "../resources/container.jpg";
-
-    Mesh triangle = Mesh(vertices, indices, std::vector<Texture>());
-
-    glm::mat4 model = glm::mat4(1.0f);
-    // model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    // Mesh triangle = Mesh(vertices, indices, std::vector<Texture>());
+    Model backpack = Model("../src/assets/models/backpack/backpack.obj", false);
+    defaultShader.setMat4("model", backpack.getModelMatrix());
 
     Camera c = Camera(glm::vec3(0.0f, 0.0f, 3.0f));
     glm::mat4 view = c.getViewMatrix();
 
     glm::mat4 projection = glm::mat4(1.0f);
-    projection = glm::perspective(glm::radians(90.0f), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
+    projection = glm::perspective(glm::radians(c.zoom), window.getAspectRatio(), 0.1f, 1000.0f);
 
-    defaultShader.setMat4("model", model);
     defaultShader.setMat4("view", view);
     defaultShader.setMat4("projection", projection);
 
@@ -183,7 +178,7 @@ int main(int argc, char *argv[])
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Draw the triangle
-        triangle.Draw(defaultShader);
+        backpack.Draw(defaultShader);
 
         // Swap the buffer
         window.swapBuffer();

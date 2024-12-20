@@ -3,10 +3,11 @@
 #include <glm/glm.hpp>
 #include <SDL2/SDL_image.h>
 
-#include "shader.h"
-
 #include <vector>
 #include <string>
+
+#include "shader.h"
+#include "node.h"
 
 struct Vertex
 {
@@ -15,20 +16,14 @@ struct Vertex
     glm::vec2 texCoord;
 };
 
-enum TextureType
-{
-    DIFFUSE,
-    SPECULAR,
-};
-
 struct Texture
 {
     unsigned int id;
-    TextureType type;
+    std::string type;
     std::string path;
 };
 
-class Mesh
+class Mesh : public Node
 {
 public:
     std::vector<Vertex> vertices;
@@ -56,19 +51,12 @@ public:
             std::string number;
             std::string name = "texture_";
 
-            switch (textures[i].type)
-            {
-            case DIFFUSE:
-                name += "diffuse";
-                diffuseCount++;
-                break;
-            case SPECULAR:
-                name += "specular";
-                specularCount++;
-                break;
-            }
+            if (textures[i].type == "diffuse")
+                number = std::to_string(diffuseCount++);
+            else if (textures[i].type == "specular")
+                number = std::to_string(specularCount++);
 
-            glUniform1i(glGetUniformLocation(shader.ID, (name + "[" + std::to_string(i) + "]").c_str()), i);
+            glUniform1i(glGetUniformLocation(shader.ID, (name + "[" + number + "]").c_str()), i);
 
             glBindTexture(GL_TEXTURE_2D, textures[i].id);
         }
