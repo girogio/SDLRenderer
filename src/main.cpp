@@ -1,14 +1,19 @@
-#define GL_VERSION_MAJOR 4
-#define GL_VERSION_MINOR 1
+#define SCREEN_WIDTH 1920
+#define SCREEN_HEIGHT 1080
 
 #include <iostream>
-#define SCREEN_WIDTH 800
-#define SCREEN_HEIGHT 600
+#include <vector>
 
-#include <SDL.h>
 #include <GL/glew.h>
+#include <SDL2/SDL.h>
+#include <SDL_image.h>
 
+#include "window.h"
+
+#include "engine/camera.h"
 #include "engine/shader.h"
+#include "engine/mesh.h"
+#include "engine/input.h"
 
 void resizeCallback(int width, int height)
 {
@@ -17,83 +22,77 @@ void resizeCallback(int width, int height)
 
 int main(int argc, char *argv[])
 {
-    if (SDL_Init(SDL_INIT_VIDEO) < 0)
-    {
-        std::cerr << "SDL initialization failed: " << SDL_GetError() << std::endl;
-        return -1;
-    }
+    GLWindow window = GLWindow(SCREEN_WIDTH, SCREEN_HEIGHT);
 
-    // Set OpenGL version
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, GL_VERSION_MAJOR);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, GL_VERSION_MINOR);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    glEnable(GL_MULTISAMPLE);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
 
-    // Create an SDL window and OpenGL context
-    SDL_Window *window = SDL_CreateWindow("SDLRenderer", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
-    if (!window)
-    {
-        std::cerr << "SDL window creation failed: " << SDL_GetError() << std::endl;
-        return -1;
-    }
+    InputHandler inputHandler = InputHandler();
 
-    SDL_GLContext context = SDL_GL_CreateContext(window);
-    if (!context)
-    {
-        std::cerr << "SDL OpenGL context creation failed: " << SDL_GetError() << std::endl;
-        return -1;
-    }
+    std::vector<unsigned int> indices;
 
-    // Initialize GLEW
-    glewExperimental = GL_TRUE; // Enable GLEW experimental features
-    GLenum glewError = glewInit();
-    if (glewError != GLEW_OK)
-    {
-        std::cerr << "GLEW initialization failed: " << glewGetErrorString(glewError) << std::endl;
-        return -1;
-    }
+    std::vector<Vertex> vertices = {
+        {{-0.5f, -0.5f, -0.5f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+        {{0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+        {{0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 0.0f}, {1.0f, 1.0f}},
+        {{-0.5f, 0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
+        {{-0.5f, -0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
+        {{0.5f, -0.5f, 0.5f}, {1.0f, 0.0f, 1.0f}, {1.0f, 0.0f}},
+        {{0.5f, 0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
+        {{-0.5f, 0.5f, 0.5f}, {0.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}};
 
-    // resize  callback
-    SDL_AddEventWatch([](void *userdata, SDL_Event *event) -> int
-                      {
-        if (event->type == SDL_WINDOWEVENT && event->window.event == SDL_WINDOWEVENT_RESIZED)
-        {
-            resizeCallback(event->window.data1, event->window.data2);
-        }
-        return 1; },
-                      nullptr);
-
-    // Set up vertex data
-    GLfloat vertices[] = {
-        -0.5f, -0.5f, 0.0f, // Bottom left
-        0.5f, -0.5f, 0.0f,  // Bottom right
-        0.0f, 0.5f, 0.0f,   // Top
-    };
-
-    // Create VBO and VAO
-    GLuint VBO, VAO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid *)nullptr);
-    glEnableVertexAttribArray(0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    indices = {
+        0, 1, 2, 2, 3, 0,
+        1, 5, 6, 6, 2, 1,
+        7, 6, 5, 5, 4, 7,
+        4, 0, 3, 3, 7, 4,
+        4, 5, 1, 1, 0, 4,
+        3, 2, 6, 6, 7, 3};
 
     Shader defaultShader("../src/engine/shaders/default.vs", "../src/engine/shaders/default.fs");
+
     defaultShader.use();
 
     float xOffset = 0.0f;
+    float lastFrame = 0.0f;
+    float deltaTime = 0.0f;
+    float now = 0.0f;
+
+    Texture texture1;
+    texture1.id = 0;
+    texture1.type = DIFFUSE;
+    texture1.path = "../resources/container.jpg";
+
+    Mesh triangle = Mesh(vertices, indices, std::vector<Texture>());
+
+    glm::mat4 model = glm::mat4(1.0f);
+    // model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
+    Camera c = Camera(glm::vec3(0.0f, 0.0f, 3.0f));
+    glm::mat4 view = c.getViewMatrix();
+
+    glm::mat4 projection = glm::mat4(1.0f);
+    projection = glm::perspective(glm::radians(90.0f), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
+
+    defaultShader.setMat4("model", model);
+    defaultShader.setMat4("view", view);
+    defaultShader.setMat4("projection", projection);
+
+    bool invertPitch = true;
 
     // Main loop
     bool quit = false;
     while (!quit)
     {
+        // Calculate delta time
+        now = SDL_GetTicks() / 1000.0f;
+        deltaTime = now - lastFrame;
+        lastFrame = now;
+
+        // model = glm::rotate(model, glm::radians(10.0f * deltaTime), glm::vec3(0.5f, 1.0f, 0.0f));
+        // defaultShader.setMat4("model", model);
 
         SDL_Event event;
         while (SDL_PollEvent(&event))
@@ -103,36 +102,94 @@ int main(int argc, char *argv[])
                 quit = true;
             }
 
+            if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_RESIZED)
+            {
+                resizeCallback(event.window.data1, event.window.data2);
+            }
+
+            if (event.type == SDL_MOUSEMOTION && SDL_GetRelativeMouseMode())
+            {
+                c.processMouseMovement(event.motion.xrel, event.motion.yrel * (invertPitch ? -1 : 1));
+            }
+
+            if (event.type == SDL_MOUSEBUTTONDOWN)
+            {
+                SDL_SetRelativeMouseMode(SDL_TRUE);
+            }
+
+            if (event.type == SDL_MOUSEWHEEL)
+            {
+                c.processMouseScroll(event.wheel.y);
+                projection = glm::perspective(glm::radians(c.zoom), window.getAspectRatio(), 0.1f, 100.0f);
+                defaultShader.setMat4("projection", projection);
+            }
+
             if (event.type == SDL_KEYDOWN)
             {
-                if (event.key.keysym.sym == SDLK_ESCAPE)
+                switch (event.key.keysym.sym)
                 {
-                    quit = true;
+                case SDLK_ESCAPE:
+                    SDL_SetRelativeMouseMode(SDL_FALSE);
+                    break;
+                case SDLK_w:
+                case SDLK_s:
+                case SDLK_a:
+                case SDLK_d:
+                    inputHandler.setKeyDown(event.key.keysym.sym);
+                    break;
+                }
+            }
+            else if (event.type == SDL_KEYUP)
+            {
+                switch (event.key.keysym.sym)
+                {
+                case SDLK_w:
+                case SDLK_s:
+                case SDLK_a:
+                case SDLK_d:
+                    inputHandler.setKeyUp(event.key.keysym.sym);
+                    break;
                 }
             }
         }
 
+        CameraMovement direction = NONE;
+
+        if (inputHandler.isKeyDown(SDLK_w))
+        {
+            direction = FORWARD;
+            c.processKeyboard(direction, deltaTime);
+        }
+        if (inputHandler.isKeyDown(SDLK_s))
+        {
+            direction = BACKWARD;
+            c.processKeyboard(direction, deltaTime);
+        }
+        if (inputHandler.isKeyDown(SDLK_a))
+        {
+            direction = LEFT;
+            c.processKeyboard(direction, deltaTime);
+        }
+        if (inputHandler.isKeyDown(SDLK_d))
+        {
+            direction = RIGHT;
+            c.processKeyboard(direction, deltaTime);
+        }
+
+        defaultShader.setMat4("view", c.getViewMatrix());
+
         // Clear the screen
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Draw the triangle
-        glBindVertexArray(VAO);
-
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-        glBindVertexArray(0);
+        triangle.Draw(defaultShader);
 
         // Swap the buffer
-        SDL_GL_SwapWindow(window);
+        window.swapBuffer();
     }
 
-    // Cleanup
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-
-    SDL_GL_DeleteContext(context);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
+    window.close();
 
     return 0;
 }
