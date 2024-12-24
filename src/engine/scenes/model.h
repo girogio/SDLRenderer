@@ -7,7 +7,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-#include "../stb_image.h"
+#include "../../stb_image.h"
 
 #include "mesh.h"
 #include "node.h"
@@ -22,19 +22,39 @@ public:
     std::string directory;
     bool gammaCorrection;
 
+    // copy constructor
+    Model(const Model &model)
+    {
+        this->meshes = model.meshes;
+        this->textures_loaded = model.textures_loaded;
+        this->directory = model.directory;
+        this->gammaCorrection = model.gammaCorrection;
+
+        this->position = model.position;
+        this->scale = model.scale;
+        this->rotation = model.rotation;
+        this->parent = model.parent;
+        this->localMatrix = model.localMatrix;
+        this->worldMatrix = model.worldMatrix;
+    }
+
     Model(std::string path, bool gamma) : gammaCorrection(gamma)
     {
         loadModel(path);
     }
 
-    void Draw(Shader &shader)
+    void draw(Shader &shader)
     {
+
+        shader.setMat4("model", worldMatrix);
+
         for (unsigned int i = 0; i < meshes.size(); i++)
-            meshes[i].Draw(shader);
+            meshes[i].draw(shader);
     }
 
 private:
-    void loadModel(std::string path)
+    void
+    loadModel(std::string path)
     {
         Assimp::Importer import;
         const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals);
@@ -67,6 +87,7 @@ private:
         std::vector<Vertex> vertices;
         std::vector<unsigned int> indices;
         std::vector<Texture> textures;
+        stbi_set_flip_vertically_on_load(true);
 
         for (unsigned int i = 0; i < mesh->mNumVertices; i++)
         {
@@ -177,8 +198,6 @@ unsigned int TextureFromFile(const char *path, const std::string &directory, boo
     glGenTextures(1, &textureID);
 
     int width, height, nrComponents;
-    // flip the texture on the y-axis
-    stbi_set_flip_vertically_on_load(true);
     unsigned char *data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
 
     if (data)
@@ -204,7 +223,7 @@ unsigned int TextureFromFile(const char *path, const std::string &directory, boo
     }
     else
     {
-        std::cout << "Texture failed to load at path: " << path << std::endl;
+        std::cerr << "Texture failed to load at path: " << path << std::endl;
         stbi_image_free(data);
     }
 

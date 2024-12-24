@@ -6,7 +6,7 @@
 #define GL_VERSION_MAJOR 4
 #define GL_VERSION_MINOR 1
 
-#define MSAA_SAMPLES 4
+#define MSAA_SAMPLES 16
 #define DEPTH_SIZE 24
 #define STENCIL_SIZE 8
 
@@ -17,10 +17,9 @@ private:
     SDL_GLContext context;
 
 public:
-    int width;
-    int height;
+    float width, height;
 
-    GLWindow(int width, int height) : width(width), height(height)
+    GLWindow()
     {
         this->initWindow();
     }
@@ -33,6 +32,12 @@ public:
             std::cerr << "SDL initialization failed: " << SDL_GetError() << std::endl;
             exit(-1);
         }
+
+        SDL_DisplayMode dm;
+        SDL_GetCurrentDisplayMode(0, &dm);
+
+        width = dm.w;
+        height = dm.h;
 
         // Set OpenGL version
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, GL_VERSION_MAJOR);
@@ -52,7 +57,7 @@ public:
         SDL_SetRelativeMouseMode(SDL_TRUE);
 
         // Create an SDL window and OpenGL context
-        window = SDL_CreateWindow("SDLRenderer", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+        window = SDL_CreateWindow("SDLRenderer", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, dm.w, dm.h, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 
         if (!window)
         {
@@ -76,17 +81,13 @@ public:
             exit(-1);
         }
 
-        // resize  callback
-        SDL_AddEventWatch([](void *userdata, SDL_Event *event) -> int
-                          {
-                      if (event->type == SDL_WINDOWEVENT && event->window.event == SDL_WINDOWEVENT_RESIZED)
-                      {
-                      glViewport(0, 0, event->window.data1, event->window.data2);
-                      }
-                      return 1; },
-                          nullptr);
+        glViewport(0, 0, dm.w, dm.h);
 
-        // glEnable(GL_MULTISAMPLE);
+        glEnable(GL_MULTISAMPLE);
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_FRAMEBUFFER_SRGB);
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
     }
 
     void swapBuffer()

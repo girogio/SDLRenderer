@@ -1,6 +1,3 @@
-#define SCREEN_WIDTH 1920
-#define SCREEN_HEIGHT 1080
-
 #include <iostream>
 #include <vector>
 
@@ -10,87 +7,65 @@
 
 #include "window.h"
 
-#include "engine/input.h"
-#include "engine/camera.h"
+#include "engine/managers/input.h"
+#include "engine/scenes/camera.h"
+#include "engine/scenes/scene.h"
 #include "engine/shader.h"
 
-#include "engine/mesh.h"
-#include "engine/model.h"
-
-void resizeCallback(int width, int height)
-{
-    glViewport(0, 0, width, height);
-}
+#include "engine/scenes/mesh.h"
+#include "engine/scenes/model.h"
 
 int main(int argc, char *argv[])
 {
-    GLWindow window = GLWindow(SCREEN_WIDTH, SCREEN_HEIGHT);
-
-    glEnable(GL_MULTISAMPLE);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
+    GLWindow window = GLWindow();
 
     InputHandler inputHandler = InputHandler();
 
-    std::vector<unsigned int> indices;
+    Shader defaultShader("../src/assets/shaders/default.vs", "../src/assets/shaders/default.fs");
+    Shader lightShader("../src/assets/shaders/light.vs", "../src/assets/shaders/light.fs");
 
-    std::vector<Vertex> vertices = {
-        {{-0.5f, -0.5f, -0.5f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-        {{0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-        {{0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 0.0f}, {1.0f, 1.0f}},
-        {{-0.5f, 0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
-        {{-0.5f, -0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
-        {{0.5f, -0.5f, 0.5f}, {1.0f, 0.0f, 1.0f}, {1.0f, 0.0f}},
-        {{0.5f, 0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
-        {{-0.5f, 0.5f, 0.5f}, {0.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}};
+    glm::mat4 projection = glm::perspective(glm::radians(90.0f), window.getAspectRatio(), 0.1f, 100.0f);
 
-    // triangle vertices (position, normal, texCoords)
-    // 0,0 1,0 0.5,1
-    std::vector<Vertex> triangleVertices = {
-        {{-0.5f, -0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
-        {{0.5f, -0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f}},
-        {{0.0f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.5f, 1.0f}},
-    };
+    Camera camera = Camera(projection, glm::vec3(0.0f, 0.0f, -4.0f));
 
-    std::vector<unsigned int> triangleIndices = {0, 1, 2};
+    Model backpack = Model("../src/assets/models/backpack/backpack.obj", false);
 
-    indices = {
-        0, 1, 2, 2, 3, 0,
-        1, 5, 6, 6, 2, 1,
-        7, 6, 5, 5, 4, 7,
-        4, 0, 3, 3, 7, 4,
-        4, 5, 1, 1, 0, 4,
-        3, 2, 6, 6, 7, 3};
-
-    Shader defaultShader("../src/engine/shaders/default.vs", "../src/engine/shaders/default.fs");
-
-    defaultShader.use();
-
-    float xOffset = 0.0f;
     float lastFrame = 0.0f;
     float deltaTime = 0.0f;
     float now = 0.0f;
 
-    Model backpack = Model("../src/assets/models/backpack/backpack.obj", false);
-    defaultShader.setMat4("model", backpack.getModelMatrix());
+    glm::vec3 lightPos = glm::vec3(0.f, 0.f, -4.f);
+    glm::vec3 lightDirection = glm::vec3(0.f, 0.0f, -2.f);
+    glm::vec3 lightAmbient = glm::vec3(0.1f, 0.1f, 0.1f);
+    glm::vec3 lightDiffuse = glm::vec3(1.0f, 1.0f, 1.0f);
+    glm::vec3 lightSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
 
-    Camera c = Camera(glm::vec3(0.0f, 0.0f, 3.0f));
-    glm::mat4 view = c.getViewMatrix();
+    camera.turnTowards(backpack.position);
 
-    glm::mat4 projection = glm::mat4(1.0f);
-    projection = glm::perspective(glm::radians(c.zoom), window.getAspectRatio(), 0.1f, 1000.0f);
+    Light light = Light(lightAmbient, lightDiffuse, lightSpecular, lightDirection);
+    light.position = lightPos;
+    light.name = "light";
+    light.m.name = "lightmodel";
 
-    defaultShader.setMat4("view", view);
-    defaultShader.setMat4("projection", projection);
+    light.updateWorldMatrix();
 
-    bool invertPitch = true;
+    std::vector<Model> models{backpack};
+    std::vector<Camera> cameras{camera};
+    std::vector<Light> lights = {light};
 
-    // Main loop
+    Scene scene = Scene(models, cameras, lights);
+
+    float bgColor[] = {0.1f, 0.1f, 0.1f, 1.0f};
+    float gammaCorrection = 2.2f;
+
+    float gammaCorrectedBgColor[3] = {
+        pow(bgColor[0], gammaCorrection),
+        pow(bgColor[1], gammaCorrection),
+        pow(bgColor[2], gammaCorrection)};
+
     bool quit = false;
     while (!quit)
     {
-        // Calculate delta time
         now = SDL_GetTicks() / 1000.0f;
         deltaTime = now - lastFrame;
         lastFrame = now;
@@ -99,94 +74,21 @@ int main(int argc, char *argv[])
         while (SDL_PollEvent(&event))
         {
             if (event.type == SDL_QUIT)
-            {
                 quit = true;
-            }
-
-            if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_RESIZED)
-            {
-                resizeCallback(event.window.data1, event.window.data2);
-            }
-
-            if (event.type == SDL_MOUSEMOTION && SDL_GetRelativeMouseMode())
-            {
-                c.processMouseMovement(event.motion.xrel, event.motion.yrel * (invertPitch ? -1 : 1));
-            }
-
-            if (event.type == SDL_MOUSEBUTTONDOWN)
-            {
-                SDL_SetRelativeMouseMode(SDL_TRUE);
-            }
-
-            if (event.type == SDL_MOUSEWHEEL)
-            {
-                c.processMouseScroll(event.wheel.y);
-                projection = glm::perspective(glm::radians(c.zoom), window.getAspectRatio(), 0.1f, 100.0f);
-                defaultShader.setMat4("projection", projection);
-            }
-
-            if (event.type == SDL_KEYDOWN)
-            {
-                switch (event.key.keysym.sym)
-                {
-                case SDLK_ESCAPE:
-                    SDL_SetRelativeMouseMode(SDL_FALSE);
-                    break;
-                case SDLK_w:
-                case SDLK_s:
-                case SDLK_a:
-                case SDLK_d:
-                    inputHandler.setKeyDown(event.key.keysym.sym);
-                    break;
-                }
-            }
-            else if (event.type == SDL_KEYUP)
-            {
-                switch (event.key.keysym.sym)
-                {
-                case SDLK_w:
-                case SDLK_s:
-                case SDLK_a:
-                case SDLK_d:
-                    inputHandler.setKeyUp(event.key.keysym.sym);
-                    break;
-                }
-            }
+            scene.processSDLEvents(event);
         }
 
-        CameraMovement direction = NONE;
+        scene.handleInput(deltaTime);
 
-        if (inputHandler.isKeyDown(SDLK_w))
-        {
-            direction = FORWARD;
-            c.processKeyboard(direction, deltaTime);
-        }
-        if (inputHandler.isKeyDown(SDLK_s))
-        {
-            direction = BACKWARD;
-            c.processKeyboard(direction, deltaTime);
-        }
-        if (inputHandler.isKeyDown(SDLK_a))
-        {
-            direction = LEFT;
-            c.processKeyboard(direction, deltaTime);
-        }
-        if (inputHandler.isKeyDown(SDLK_d))
-        {
-            direction = RIGHT;
-            c.processKeyboard(direction, deltaTime);
-        }
+        if (scene.inputHandler.isKeyDown(SDLK_ESCAPE))
+            quit = true;
 
-        defaultShader.setMat4("view", c.getViewMatrix());
-
-        // Clear the screen
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClearColor(gammaCorrectedBgColor[0], gammaCorrectedBgColor[1], gammaCorrectedBgColor[2], 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Draw the triangle
-        // triangle.Draw(defaultShader);
+        scene.update(deltaTime);
 
-        backpack.Draw(defaultShader);
+        scene.draw(defaultShader);
 
         // Swap the buffer
         window.swapBuffer();

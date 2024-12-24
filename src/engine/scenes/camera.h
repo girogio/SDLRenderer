@@ -1,7 +1,13 @@
+#pragma once
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "../shader.h"
+
+#ifndef CAMERAMOVEMENT
+#define CAMERAMOVEMENT
 enum CameraMovement
 {
     NONE,
@@ -10,16 +16,22 @@ enum CameraMovement
     LEFT,
     RIGHT,
 };
+#endif
 
 class Camera
 {
 
 public:
+    glm::mat4 projectionMat;
     glm::vec3 position;
     glm::vec3 front;
     glm::vec3 up;
     glm::vec3 right;
     glm::vec3 worldUp;
+
+    std::string cameraUniformName = "camera.";
+
+    bool invertPitch = true;
 
     float yaw;
     float pitch;
@@ -28,7 +40,7 @@ public:
     float mouseSensitivity;
     float zoom;
 
-    Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f),
+    Camera(glm::mat4 projectionMat, glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f),
            glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f),
            float yaw = -90.0f,
            float pitch = 0.0f,
@@ -38,6 +50,7 @@ public:
           mouseSensitivity(0.1f),
           zoom(90.0f)
     {
+        this->projectionMat = projectionMat;
         this->position = position;
         this->worldUp = up;
         this->yaw = yaw;
@@ -46,9 +59,37 @@ public:
         updateCameraVectors();
     }
 
-    glm::mat4 getViewMatrix()
+    Camera(const Camera &camera)
+    {
+        this->projectionMat = camera.projectionMat;
+        this->position = camera.position;
+        this->front = camera.front;
+        this->up = camera.up;
+        this->right = camera.right;
+        this->worldUp = camera.worldUp;
+        this->yaw = camera.yaw;
+        this->pitch = camera.pitch;
+        this->movementSpeed = camera.movementSpeed;
+        this->mouseSensitivity = camera.mouseSensitivity;
+        this->zoom = camera.zoom;
+    }
+
+    void turnTowards(glm::vec3 target)
+    {
+        glm::vec3 direction = glm::normalize(target - position);
+        pitch = glm::degrees(asin(direction.y));
+        yaw = glm::degrees(atan2(direction.z, direction.x));
+        updateCameraVectors();
+    }
+
+    glm::mat4 getViewMatrix() const
     {
         return glm::lookAt(position, position + front, up);
+    }
+
+    glm::mat4 getProjectionMatrix() const
+    {
+        return projectionMat;
     }
 
     void processKeyboard(CameraMovement direction, float deltaTime)
@@ -71,7 +112,7 @@ public:
         yoffset *= mouseSensitivity;
 
         yaw += xoffset;
-        pitch += yoffset;
+        pitch += invertPitch ? -yoffset : yoffset;
 
         if (constrainPitch)
         {
@@ -92,6 +133,23 @@ public:
             zoom = 1.0f;
         if (zoom >= 90.0f)
             zoom = 90.0f;
+    }
+
+    void bind(Shader &shader)
+    {
+        shader.setVec3(cameraUniformName + "position", position);
+        shader.setMat4(cameraUniformName + "view", getViewMatrix());
+        shader.setMat4(cameraUniformName + "projection", getProjectionMatrix());
+    }
+
+    std::string generateShaderStruct() const
+    {
+        return "struct Camera {\n"
+               "    mat4 view;\n"
+               "    vec3 position;\n"
+               "    mat4 projection;\n"
+               "};\n"
+               "uniform Camera camera;\n";
     }
 
 private:

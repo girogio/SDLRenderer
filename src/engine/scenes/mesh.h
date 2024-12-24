@@ -1,12 +1,12 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include "../stb_image.h"
+#include "../../stb_image.h"
 
 #include <vector>
 #include <string>
 
-#include "shader.h"
+#include "../shader.h"
 #include "node.h"
 
 struct Vertex
@@ -23,7 +23,7 @@ struct Texture
     std::string path;
 };
 
-class Mesh : public Node
+class Mesh
 {
 public:
     std::vector<Vertex> vertices;
@@ -39,7 +39,7 @@ public:
         setupMesh();
     }
 
-    void Draw(Shader &shader)
+    void draw(Shader &shader)
     {
         unsigned int diffuseCount = 1;
         unsigned int specularCount = 1;
@@ -61,7 +61,7 @@ public:
             else if (textures[i].type == "texture_height")
                 number = std::to_string(heightCount++);
 
-            glUniform1i(glGetUniformLocation(shader.ID, (textures[i].type + number).c_str()), i);
+            glUniform1i(glGetUniformLocation(shader.ID, ("material." + textures[i].type + number).c_str()), i);
 
             glBindTexture(GL_TEXTURE_2D, textures[i].id);
         }
