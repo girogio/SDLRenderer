@@ -15,6 +15,8 @@
 #include "engine/scenes/mesh.h"
 #include "engine/scenes/model.h"
 
+#define FPS_INTERVAL 1.0
+
 int main(int argc, char *argv[])
 {
     GLWindow window = GLWindow();
@@ -53,6 +55,10 @@ int main(int argc, char *argv[])
     std::vector<Camera> cameras{camera};
     std::vector<Light> lights = {light};
 
+    float fps = 0.0f;
+    float fpsCounter = 0.0f;
+    int frames = 0;
+
     Scene scene = Scene(models, cameras, lights);
 
     float bgColor[] = {0.1f, 0.1f, 0.1f, 1.0f};
@@ -89,6 +95,17 @@ int main(int argc, char *argv[])
         scene.update(deltaTime);
 
         scene.draw(defaultShader);
+
+        // fps counter
+        frames++;
+        fpsCounter += deltaTime;
+        if (fpsCounter >= FPS_INTERVAL)
+        {
+            fps = frames / fpsCounter;
+            std::cout << "FPS: " << fps << std::endl;
+            frames = 0;
+            fpsCounter = 0.0f;
+        }
 
         // Swap the buffer
         window.swapBuffer();

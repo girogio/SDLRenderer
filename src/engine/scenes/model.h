@@ -20,6 +20,7 @@ public:
     std::vector<Texture> textures_loaded; // optimization
     std::vector<Mesh> meshes;
     std::string directory;
+
     bool gammaCorrection;
 
     // copy constructor
@@ -46,6 +47,7 @@ public:
     void draw(Shader &shader)
     {
 
+        shader.setMat3("normalMatrix", normalMatrix);
         shader.setMat4("model", worldMatrix);
 
         for (unsigned int i = 0; i < meshes.size(); i++)

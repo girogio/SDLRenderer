@@ -21,6 +21,7 @@ public:
 
     glm::mat4 localMatrix = glm::mat4(1.0f);
     glm::mat4 worldMatrix = glm::mat4(1.0f);
+    glm::mat3 normalMatrix = glm::mat4(1.0f);
 
     Node() : position(glm::vec3(0.0f)), scale(glm::vec3(1.0f)), rotation(glm::vec3(0.0f)), parent(nullptr)
     {
@@ -44,6 +45,7 @@ public:
         this->parent = node.parent;
         this->localMatrix = node.localMatrix;
         this->worldMatrix = node.worldMatrix;
+        this->normalMatrix = node.normalMatrix;
     }
 
     void removeChild(Node *child)
@@ -88,15 +90,15 @@ public:
     {
         computeLocalMatrix();
 
+        normalMatrix = glm::mat3(glm::transpose(glm::inverse(worldMatrix)));
+
         if (parentWorldMatrix != nullptr)
-            this->worldMatrix = *parentWorldMatrix * this->localMatrix;
+            worldMatrix = *parentWorldMatrix * localMatrix;
         else
-            this->worldMatrix = this->localMatrix;
+            worldMatrix = localMatrix;
 
         for (unsigned int i = 0; i < children.size(); i++)
-        {
-            this->children[i]->updateWorldMatrix(&worldMatrix);
-        }
+            children[i]->updateWorldMatrix(&worldMatrix);
     }
 
     void updateWorldMatrix()

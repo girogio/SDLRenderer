@@ -21,6 +21,7 @@ struct Material {
 };
 
 uniform Material material;
+uniform mat3 normalMatrix;
 
 out vec3 fragPos;
 out vec2 texCoord;
@@ -36,6 +37,6 @@ void main() {
     texCoord = aTexCoord;
     fragPos = vec3(model * vec4(aPos, 1.0));
     cameraStruct = camera;
-    normal = transformNormal(avecNormal);
+    normal = normalMatrix * avecNormal;
     gl_Position = camera.projection * camera.view * model * vec4(aPos, 1.0);
 }

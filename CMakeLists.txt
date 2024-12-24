@@ -15,12 +15,9 @@ find_package(SDL2 CONFIG REQUIRED)
 target_include_directories(SDLRender PRIVATE ${SDL2_INCLUDE_DIRS})
 target_link_libraries(SDLRender
         PRIVATE
-        SDL2::SDL2
+        SDL2::SDL2-static
         SDL2::SDL2main
 )
-
-find_package(SDL2_image CONFIG REQUIRED)
-target_link_libraries(SDLRender PRIVATE SDL2_image::SDL2_image)
 
 find_package(GLEW REQUIRED)
 target_link_libraries(SDLRender PRIVATE GLEW::GLEW)

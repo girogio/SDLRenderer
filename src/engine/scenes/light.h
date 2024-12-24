@@ -20,10 +20,14 @@ public:
     Shader shader = Shader("../src/assets/shaders/light.vs", "../src/assets/shaders/light.fs");
     Model m = Model("../src/assets/models/cube/cube.obj", false);
 
+    glm::vec3 direction;
     glm::vec3 ambient;
     glm::vec3 diffuse;
     glm::vec3 specular;
-    glm::vec3 direction;
+
+    float constant = 1.0f;
+    float linear = 0.09f;
+    float quadratic = 0.032f;
 
     std::string lightUniformName = "light";
 
@@ -55,9 +59,10 @@ public:
     {
         shader.setVec3(lightUniformName + ".position", position);
         shader.setVec3(lightUniformName + ".direction", direction);
-        shader.setVec3(lightUniformName + ".ambient", ambient);
-        shader.setVec3(lightUniformName + ".diffuse", diffuse);
-        shader.setVec3(lightUniformName + ".specular", specular);
+
+        shader.setMat3(lightUniformName + ".colours", glm::mat3(ambient, diffuse, specular));
+
+        shader.setVec3(lightUniformName + ".const_lin_quad", glm::vec3(constant, linear, quadratic));
     }
 
     void draw(Shader &shader)
