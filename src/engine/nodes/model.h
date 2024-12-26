@@ -7,7 +7,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-#include "../../stb_image.h"
+#include <stb_image.h>
 
 #include "../scenes/mesh.h"
 #include "node.h"

@@ -5,7 +5,10 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_BUILD_TYPE Release)
 set(CMAKE_CONFIGURATION_TYPES "Release" CACHE STRING "" FORCE)
 
-add_executable(SDLRender src/main.cpp src/stb_image.h src/stb_image.cpp)
+
+add_executable(SDLRender src/main.cpp lib/stb_image.cpp)
+
+target_include_directories(SDLRender PRIVATE lib)
 
 find_package(OpenGL REQUIRED)
 target_link_libraries(SDLRender PRIVATE ${OPENGL_LIBRARIES})
