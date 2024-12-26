@@ -7,13 +7,15 @@
 #include <string>
 
 #include "../shader.h"
-#include "node.h"
+#include "../nodes/node.h"
 
 struct Vertex
 {
     glm::vec3 position;
     glm::vec3 normal;
     glm::vec2 texCoord;
+    glm::vec3 tangent;
+    glm::vec3 bitangent;
 };
 
 struct Texture
@@ -100,6 +102,12 @@ private:
 
         glEnableVertexAttribArray(2);
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)offsetof(Vertex, texCoord));
+
+        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)offsetof(Vertex, tangent));
+
+        glEnableVertexAttribArray(4);
+        glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)offsetof(Vertex, bitangent));
 
         glBindVertexArray(0);
     }

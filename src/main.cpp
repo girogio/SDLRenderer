@@ -7,13 +7,15 @@
 
 #include "window.h"
 
-#include "engine/managers/input.h"
-#include "engine/scenes/camera.h"
-#include "engine/scenes/scene.h"
 #include "engine/shader.h"
 
+#include "engine/managers/input.h"
+
 #include "engine/scenes/mesh.h"
-#include "engine/scenes/model.h"
+#include "engine/scenes/scene.h"
+
+#include "engine/nodes/camera.h"
+#include "engine/nodes/model.h"
 
 #define FPS_INTERVAL 1.0
 
@@ -31,6 +33,7 @@ int main(int argc, char *argv[])
     Camera camera = Camera(projection, glm::vec3(0.0f, 0.0f, -4.0f));
 
     Model backpack = Model("../src/assets/models/backpack/backpack.obj", false);
+    // backpack.scale = glm::vec3(1f);
 
     float lastFrame = 0.0f;
     float deltaTime = 0.0f;
@@ -38,18 +41,14 @@ int main(int argc, char *argv[])
 
     glm::vec3 lightPos = glm::vec3(0.f, 0.f, -4.f);
     glm::vec3 lightDirection = glm::vec3(0.f, 0.0f, -2.f);
-    glm::vec3 lightAmbient = glm::vec3(0.1f, 0.1f, 0.1f);
+    glm::vec3 lightAmbient = glm::vec3(0.2f);
     glm::vec3 lightDiffuse = glm::vec3(1.0f, 1.0f, 1.0f);
     glm::vec3 lightSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
 
     camera.turnTowards(backpack.position);
 
-    Light light = Light(lightAmbient, lightDiffuse, lightSpecular, lightDirection);
+    Light light(lightAmbient, lightDiffuse, lightSpecular, lightDirection);
     light.position = lightPos;
-    light.name = "light";
-    light.m.name = "lightmodel";
-
-    light.updateWorldMatrix();
 
     std::vector<Model> models{backpack};
     std::vector<Camera> cameras{camera};
@@ -69,6 +68,20 @@ int main(int argc, char *argv[])
         pow(bgColor[1], gammaCorrection),
         pow(bgColor[2], gammaCorrection)};
 
+    unsigned int FBO;
+    glGenFramebuffers(1, &FBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+
+    unsigned int textureColorbuffer;
+    glGenTextures(1, &textureColorbuffer);
+    glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, window.width, window.height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
     bool quit = false;
     while (!quit)
     {
@@ -84,19 +97,16 @@ int main(int argc, char *argv[])
             scene.processSDLEvents(event);
         }
 
-        scene.handleInput(deltaTime);
-
         if (scene.inputHandler.isKeyDown(SDLK_ESCAPE))
             quit = true;
 
         glClearColor(gammaCorrectedBgColor[0], gammaCorrectedBgColor[1], gammaCorrectedBgColor[2], 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
+        scene.handleInput(deltaTime);
         scene.update(deltaTime);
-
         scene.draw(defaultShader);
 
-        // fps counter
         frames++;
         fpsCounter += deltaTime;
         if (fpsCounter >= FPS_INTERVAL)

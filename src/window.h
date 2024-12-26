@@ -6,7 +6,7 @@
 #define GL_VERSION_MAJOR 4
 #define GL_VERSION_MINOR 1
 
-#define MSAA_SAMPLES 16
+#define MSAA_SAMPLES 4
 #define DEPTH_SIZE 24
 #define STENCIL_SIZE 8
 
@@ -53,6 +53,10 @@ public:
 #endif
         SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
 
+        SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
+        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+        SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
+
         // lock mouse in window
         SDL_SetRelativeMouseMode(SDL_TRUE);
 
@@ -87,6 +91,8 @@ public:
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_FRAMEBUFFER_SRGB);
         glEnable(GL_CULL_FACE);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glCullFace(GL_BACK);
     }
 

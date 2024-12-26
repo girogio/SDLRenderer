@@ -6,9 +6,10 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/io.hpp>
 
-#include "camera.h"
-#include "light.h"
-#include "model.h"
+#include "../nodes/camera.h"
+#include "../nodes/light.h"
+#include "../nodes/model.h"
+
 #include "../managers/input.h"
 #include "../shader.h"
 
@@ -43,12 +44,8 @@ public:
     void processSDLEvents(SDL_Event event)
 
     {
-        switch (event.type)
-        {
-        case SDL_MOUSEMOTION:
+        if (event.type == SDL_MOUSEMOTION)
             cameras[activeCamera].processMouseMovement(event.motion.xrel, event.motion.yrel);
-            break;
-        }
 
         if (event.type == SDL_KEYDOWN)
         {
@@ -58,6 +55,8 @@ public:
                 SDL_SetRelativeMouseMode(SDL_FALSE);
                 break;
             case SDLK_w:
+            case SDLK_c:
+            case SDLK_SPACE:
             case SDLK_s:
             case SDLK_a:
             case SDLK_d:
@@ -65,11 +64,14 @@ public:
                 break;
             }
         }
-        else if (event.type == SDL_KEYUP)
+
+        if (event.type == SDL_KEYUP)
         {
             switch (event.key.keysym.sym)
             {
             case SDLK_w:
+            case SDLK_c:
+            case SDLK_SPACE:
             case SDLK_s:
             case SDLK_a:
             case SDLK_d:
@@ -81,18 +83,21 @@ public:
 
     void handleInput(float deltaTime)
     {
-        CameraMovement direction = NONE;
+        std::vector<std::pair<int, CameraMovement>> keyMappings = {
+            {SDLK_w, FORWARD},
+            {SDLK_s, BACKWARD},
+            {SDLK_a, LEFT},
+            {SDLK_d, RIGHT},
+            {SDLK_SPACE, UP},
+            {SDLK_c, DOWN}};
 
-        if (inputHandler.isKeyDown(SDLK_w))
-            direction = FORWARD;
-        if (inputHandler.isKeyDown(SDLK_s))
-            direction = BACKWARD;
-        if (inputHandler.isKeyDown(SDLK_a))
-            direction = LEFT;
-        if (inputHandler.isKeyDown(SDLK_d))
-            direction = RIGHT;
-
-        cameras[activeCamera].processKeyboard(direction, deltaTime);
+        for (const auto &keyMapping : keyMappings)
+        {
+            if (inputHandler.isKeyDown(keyMapping.first))
+            {
+                cameras[activeCamera].processKeyboard(keyMapping.second, deltaTime);
+            }
+        }
     }
 
     void update(float deltaTime)
@@ -108,9 +113,9 @@ public:
         for (auto &light : lights)
         {
             light.shader.use();
+            cameras[activeCamera].bind(light.shader);
             light.updateWorldMatrix();
             light.bind(light.shader);
-            cameras[activeCamera].bind(light.shader);
             light.draw(light.shader);
         }
 
