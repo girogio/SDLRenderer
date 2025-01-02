@@ -10,6 +10,7 @@
 #include "engine/shader.h"
 
 #include "engine/managers/input.h"
+#include "engine/managers/resource.h"
 
 #include "engine/scenes/mesh.h"
 #include "engine/scenes/scene.h"
@@ -23,16 +24,34 @@ int main(int argc, char *argv[])
 {
     GLWindow window = GLWindow();
 
+    if (argc < 2)
+    {
+        std::cerr << "Usage: " << argv[0] << " <path to assets directory>" << std::endl;
+        exit(-1);
+    }
+
+    std::string assetsDir = argv[1];
+
+    ResourceManager resMgr(assetsDir);
     InputHandler inputHandler = InputHandler();
 
-    Shader defaultShader("../src/assets/shaders/default.vs", "../src/assets/shaders/default.fs");
-    Shader lightShader("../src/assets/shaders/light.vs", "../src/assets/shaders/light.fs");
+    const std::string a = resMgr.getShaderPath("default.vs");
+    const std::string b = resMgr.getShaderPath("default.fs");
+
+    const std::string c = resMgr.getShaderPath("light.vs");
+    const std::string d = resMgr.getShaderPath("light.fs");
+
+    Shader defaultShader(a, b);
+
+    Shader lightShader(c, d);
 
     glm::mat4 projection = glm::perspective(glm::radians(90.0f), window.getAspectRatio(), 0.1f, 100.0f);
 
     Camera camera = Camera(projection, glm::vec3(0.0f, 0.0f, -4.0f));
 
-    Model backpack = Model("../src/assets/models/backpack/backpack.obj", false);
+    const std::string backpackPath = resMgr.getModelPath("backpack/backpack.obj");
+
+    Model backpack = Model(backpackPath, false);
     // backpack.scale = glm::vec3(1f);
 
     float lastFrame = 0.0f;
@@ -67,18 +86,6 @@ int main(int argc, char *argv[])
         pow(bgColor[0], gammaCorrection),
         pow(bgColor[1], gammaCorrection),
         pow(bgColor[2], gammaCorrection)};
-
-    // unsigned int FBO;
-    // glGenFramebuffers(1, &FBO);
-    // glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-
-    // unsigned int textureColorbuffer;
-    // glGenTextures(1, &textureColorbuffer);
-    // glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
-    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, window.width, window.height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
 
     bool quit = false;
     while (!quit)

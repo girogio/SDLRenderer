@@ -6,8 +6,8 @@
 #define GL_VERSION_MAJOR 4
 #define GL_VERSION_MINOR 1
 
-#define MSAA_SAMPLES 4
-#define DEPTH_SIZE 24
+#define MSAA_SAMPLES 2
+#define DEPTH_SIZE 32
 #define STENCIL_SIZE 8
 
 class GLWindow
@@ -55,7 +55,6 @@ public:
 
         SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
         SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
-        SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
 
         // lock mouse in window
         SDL_SetRelativeMouseMode(SDL_TRUE);
@@ -85,15 +84,26 @@ public:
             exit(-1);
         }
 
-        glViewport(0, 0, dm.w, dm.h);
-
+        // Enable MSAA
         glEnable(GL_MULTISAMPLE);
+
+        // Enable depth testing
         glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LEQUAL);
+
+        // Enable sRGB gamma correction
         glEnable(GL_FRAMEBUFFER_SRGB);
+
+        // Enable backface culling
         glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
+
+        // Enable alpha blending
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glCullFace(GL_BACK);
+
+        // Set viewport
+        glViewport(0, 0, dm.w, dm.h);
     }
 
     void swapBuffer()

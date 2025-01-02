@@ -81,7 +81,7 @@ void main() {
     float distance = length(TangentFragPos - TangentLightPos);
     float attenuation = 1.0 / (light.const_lin_quad.x + light.const_lin_quad.y * distance + light.const_lin_quad.z * distance * distance);
 
-    // ambient *= attenuation;
+    // ambient *= attenuation; // do not attenuate ambient light
     diffuse *= attenuation;
     specular *= attenuation;
 

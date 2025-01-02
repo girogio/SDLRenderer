@@ -1,5 +1,6 @@
 vcpkg_installed/
 build/
+builddir/
 
 .vscode/
 

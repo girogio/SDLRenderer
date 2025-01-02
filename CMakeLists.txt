@@ -4,6 +4,8 @@ project(SDLRender)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_BUILD_TYPE Release)
 set(CMAKE_CONFIGURATION_TYPES "Release" CACHE STRING "" FORCE)
+# optimization flags
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 
 add_executable(SDLRender src/main.cpp lib/stb_image.cpp)
