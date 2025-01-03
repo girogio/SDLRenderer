@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iostream>
 
 #include <SDL2/SDL.h>
@@ -5,9 +7,8 @@
 
 #define GL_VERSION_MAJOR 4
 #define GL_VERSION_MINOR 1
-
 #define MSAA_SAMPLES 2
-#define DEPTH_SIZE 32
+#define DEPTH_SIZE 24
 #define STENCIL_SIZE 8
 
 class GLWindow
@@ -48,19 +49,14 @@ public:
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
         SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, DEPTH_SIZE);
         SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, STENCIL_SIZE);
-#ifdef __APPLE__
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
-#endif
         SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
-
-        SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
-        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
 
         // lock mouse in window
         SDL_SetRelativeMouseMode(SDL_TRUE);
 
         // Create an SDL window and OpenGL context
-        window = SDL_CreateWindow("SDLRenderer", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, dm.w, dm.h, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+        window = SDL_CreateWindow("SDLRenderer", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, dm.w, dm.h, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED);
 
         if (!window)
         {

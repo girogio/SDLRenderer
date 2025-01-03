@@ -3,10 +3,15 @@ project(
     'cpp',
     default_options: [
         'default_library=static',
-        'cpp_std=c++23',
         'optimization=3',
     ],
 )
+
+
+# if windows
+vcpkg = find_program('vcpkg', required : true)
+run_command(vcpkg, 'install', '--x-wait-for-lock',
+                              '--x-manifest-root=' + meson.current_source_dir())
 
 sdl2_dep = dependency('sdl2')
 glew_dep = dependency('glew')

@@ -3,7 +3,7 @@
     "configurePresets": [
         {
             "name": "vcpkg",
-            "displayName": "Configure preset using toolchain file",
+            "displayName": "Windows MSVC++ 19.30.30705.0 x64",
             "description": "Sets Ninja generator, build and install directory",
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/build",

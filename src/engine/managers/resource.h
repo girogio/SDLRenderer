@@ -1,6 +1,9 @@
 #pragma once
 
 #include <string>
+#include <filesystem>
+
+#include "../shader.h"
 
 const char *textureDir = "textures";
 const char *modelDir = "models";
@@ -10,40 +13,44 @@ const char *audioDir = "audio";
 class ResourceManager
 {
 public:
-    std::string assetsDir;
+    std::filesystem::path assetsDir;
 
-    ResourceManager(const std::string &basePath)
+    ResourceManager(const std::string &basePath) : assetsDir(basePath) {}
+
+    ~ResourceManager() {};
+
+    auto getShader(const std::string shaderName)
     {
-        if (basePath.back() == '/')
-        {
-            this->assetsDir = basePath.substr(0, basePath.length() - 1);
-        }
-        else
-        {
-            this->assetsDir = basePath;
-        }
+        const auto vertexPath = getShaderPath(shaderName + ".vs").string();
+        const auto fragmentPath = getShaderPath(shaderName + ".fs").string();
+
+        return Shader(vertexPath, fragmentPath);
     }
 
-    std::string getTexturePath(const std::string textureName)
+    auto getModel(const std::string modelName, bool gamma = false)
     {
-        return assetsDir + "/" + textureDir + "/" + textureName;
+        const auto modelPath = getModelPath(modelName + "/" + modelName + ".obj").string();
+        return Model(modelPath, gamma);
     }
 
-    std::string getModelPath(const std::string modelName)
+    std::filesystem::path getTexturePath(const std::string textureName)
     {
-        return assetsDir + "/" + modelDir + "/" + modelName;
+        return (assetsDir / textureDir / textureName).string();
     }
 
-    std::string getShaderPath(const std::string shaderName)
+    std::filesystem::path getModelPath(const std::string modelName)
     {
-        return assetsDir + "/" + shaderDir + "/" + shaderName;
+        return assetsDir / modelDir / modelName;
     }
 
-    std::string getAudioPath(const std::string audioName)
+    std::filesystem::path getShaderPath(const std::string shaderName)
     {
-
-        return assetsDir + "/" + audioDir + "/" + audioName;
+        return assetsDir / shaderDir / shaderName;
     }
 
-    ~ResourceManager() {}
+    std::filesystem::path getAudioPath(const std::string audioName)
+    {
+
+        return assetsDir / audioDir / audioName;
+    }
 };

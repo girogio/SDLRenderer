@@ -35,7 +35,6 @@ struct Light {
 };
 
 uniform mat4 model;
-uniform Material material;
 uniform Light light;
 uniform Camera camera;
 

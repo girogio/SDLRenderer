@@ -17,27 +17,23 @@ public:
 
     Shader(const std::string &vertexPath, const std::string &fragmentPath)
     {
-        // 1. retrieve the vertex/fragment source code from filePath
         std::string vertexCode;
         std::string fragmentCode;
         std::ifstream vShaderFile;
         std::ifstream fShaderFile;
-        // ensure ifstream objects can throw exceptions:
+
         vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
         fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+
         try
         {
-            // open files
             vShaderFile.open(vertexPath);
             fShaderFile.open(fragmentPath);
             std::stringstream vShaderStream, fShaderStream;
-            // read file's buffer contents into streams
             vShaderStream << vShaderFile.rdbuf();
             fShaderStream << fShaderFile.rdbuf();
-            // close file handlers
             vShaderFile.close();
             fShaderFile.close();
-            // convert stream into string
             vertexCode = vShaderStream.str();
             fragmentCode = fShaderStream.str();
         }
@@ -49,6 +45,11 @@ public:
         const char *vShaderCode = vertexCode.c_str();
         const char *fShaderCode = fragmentCode.c_str();
 
+        if (vShaderCode == nullptr || fShaderCode == nullptr)
+        {
+            std::cerr << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
+        }
+
         // ------------- compile shaders -------------
 
         unsigned int vertex, fragment;
@@ -57,7 +58,11 @@ public:
 
         // vertex shader
         vertex = glCreateShader(GL_VERTEX_SHADER);
+        fragment = glCreateShader(GL_FRAGMENT_SHADER);
+
         glShaderSource(vertex, 1, &vShaderCode, nullptr);
+        glShaderSource(fragment, 1, &fShaderCode, nullptr);
+
         glCompileShader(vertex);
 
         // check for shader compile errors
@@ -70,9 +75,6 @@ public:
                       << infoLog << std::endl;
         }
 
-        // fragment shader
-        fragment = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragment, 1, &fShaderCode, nullptr);
         glCompileShader(fragment);
 
         // check for shader compile errors

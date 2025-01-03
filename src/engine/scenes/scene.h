@@ -26,6 +26,8 @@ public:
 
     unsigned int activeCamera = 0;
 
+    Scene() {}
+
     Scene(const std::vector<Model> &models, const std::vector<Camera> &cameras, const std::vector<Light> &lights)
     {
         this->models = models;
